@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Rocket : MonoBehaviour
-{   Rigidbody rigidBody;
+{   
+    [SerializeField] float rcsThrust=100f;
+    [SerializeField] float mainThrust=20f;
+    Rigidbody rigidBody;
     AudioSource audioSource;
     // Start is called before the first frame update
     void Start()
@@ -20,16 +23,37 @@ public class Rocket : MonoBehaviour
         Rotate();
     }
 
+    void OnCollisionEnter(Collision collision)
+    {
+        switch(collision.gameObject.tag)
+        {
+            case "Friendly":
+                    print("launch pad collided");
+                    break;
+            case "Fuel":
+                    print("Fuel");
+                    break;  
+            default:
+                print("dead");
+                //kill
+                break;              
+        }
+    }
+
     private void Rotate()
     {   
         rigidBody.freezeRotation=true;          //manual rotation control
+        
+        float rotationThisFrame=rcsThrust*Time.deltaTime;
+
         if (Input.GetKey(KeyCode.A))
-        {
-            transform.Rotate(Vector3.forward);
+        {   
+            
+            transform.Rotate(Vector3.forward*rotationThisFrame);
         }
         else if (Input.GetKey(KeyCode.D))
-        {
-            transform.Rotate(-Vector3.forward);
+        {   
+            transform.Rotate(-Vector3.forward*rotationThisFrame);
         }
 
         rigidBody.freezeRotation=false;         //resume physics control
@@ -38,7 +62,7 @@ public class Rocket : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.Space))
         {
-            rigidBody.AddRelativeForce(Vector3.up);    //relative force means if ship is tilted,force is in y of ship not actual y
+            rigidBody.AddRelativeForce(Vector3.up*mainThrust);    //relative force means if ship is tilted,force is in y of ship not actual y
             if (!audioSource.isPlaying)
             {
                 audioSource.Play();
