@@ -9,6 +9,7 @@ public class Rocket : MonoBehaviour
 {   
     [SerializeField] float rcsThrust=100f;
     [SerializeField] float mainThrust=20f;
+    [SerializeField] float levelLoadDelay=1f;
     [SerializeField] AudioClip mainEngine;
     [SerializeField] AudioClip death;
     [SerializeField] AudioClip success;
@@ -20,11 +21,13 @@ public class Rocket : MonoBehaviour
     AudioSource audioSource;
     enum State{Alive,Dying,Transcending};
     State state=State.Alive;
+    Boolean collisionsDisabled=false;
     // Start is called before the first frame update
     void Start()
     {
         rigidBody=GetComponent<Rigidbody>();
         audioSource=GetComponent<AudioSource>();
+       
     }
 
     // Update is called once per frame
@@ -35,11 +38,26 @@ public class Rocket : MonoBehaviour
             RespondToThrustInput();
             RespondToRotateInput();
         }
+        if(Debug.isDebugBuild)
+        {
+            RespondToDebugKeys();
+        }
+    }
+    void RespondToDebugKeys()
+    {
+        if(Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextLevel();
+        }
+        else if(Input.GetKeyDown(KeyCode.C))
+        {
+            collisionsDisabled=!collisionsDisabled;
+        }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if(state!=State.Alive)
+        if(state!=State.Alive || collisionsDisabled)
         {
             return;
         }
@@ -63,14 +81,14 @@ public class Rocket : MonoBehaviour
         audioSource.Stop();
         audioSource.PlayOneShot(success);
         successParticles.Play();
-        Invoke("LoadNextLevel", 1f);
+        Invoke("LoadNextLevel", levelLoadDelay);
     }
     private void StartDeathProcess()
     {
         state = State.Dying;
         audioSource.Stop();
         audioSource.PlayOneShot(death);
-        Invoke("LoadFirstLevel", 1f);
+        Invoke("LoadFirstLevel", levelLoadDelay);
     }
 
     private void LoadFirstLevel()
@@ -121,6 +139,8 @@ public class Rocket : MonoBehaviour
         {
             audioSource.PlayOneShot(mainEngine);
         }
+        print("play");
         mainEngineParticles.Play();
+        
     }
 }
